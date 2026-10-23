@@ -21,7 +21,7 @@ clusterIssuer:
   email: ""
   server: https://acme-staging-v02.api.letsencrypt.org/directory
 
-# Only web and the gateway are reachable from outside (organization ADR-0008).
+# Only web and the gateway are reachable from outside.
 backends:
   web:
     service: web

@@ -19,9 +19,8 @@ Versions are pinned. Upgrade them deliberately, in a pull request.
 | RabbitMQ Messaging Topology Operator | Vhosts, users, permissions as resources | release manifest | v1.20.4 |
 | kube-prometheus-stack, Loki, Alloy | Metrics and logs | see [monitoring/](../monitoring/README.md) | |
 
-Why Traefik: the community `ingress-nginx` controller has been retired, and
-Traefik is maintained, cloud-neutral and can also act as an API gateway
-later (gateway repository, ADR-0001). Any controller that supports standard
+Traefik is maintained, cloud-neutral and could also take over generic gateway
+duties later (see the gateway's `docs/request-handling.md`). Any controller that supports standard
 `Ingress` works; set `ingressClassName` in the `edge` chart.
 
 ## Steps

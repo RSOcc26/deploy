@@ -1,7 +1,7 @@
 # One PostgreSQL cluster per environment, with a separate database and
-# separate roles per service (organization ADR-0003). Each service gets a
+# separate roles per service (organization ADR-0001). Each service gets a
 # migration role that owns its database and a runtime role without BYPASSRLS
-# (ADR-0004). Table privileges for the runtime role are granted by the
+# (row-level security stays enforced). Table privileges for the runtime role are granted by the
 # service's own migrations.
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
