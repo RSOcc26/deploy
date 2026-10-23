@@ -2,7 +2,7 @@
 
 One-time setup of a Kubernetes cluster for CompanyCentral: namespaces, the
 Ingress controller, cert-manager and the operators that run PostgreSQL and
-RabbitMQ. Everything after this is Helm releases from `helm/` (see
+Apache Kafka. Everything after this is Helm releases from `helm/` (see
 [docs/deployment.md](../docs/deployment.md)).
 
 > **Status:** documented, not yet run against a cluster. No cluster exists yet,
@@ -15,8 +15,7 @@ Versions are pinned. Upgrade them deliberately, in a pull request.
 | Traefik | Ingress controller (TLS via cert-manager) | `traefik/traefik` | chart 42.1.3 |
 | cert-manager | Let's Encrypt certificates | `jetstack/cert-manager` | v1.21.2 |
 | CloudNativePG | PostgreSQL operator | `cnpg/cloudnative-pg` | chart 0.29.1 (operator 1.30.1) |
-| RabbitMQ Cluster Operator | RabbitMQ brokers | release manifest | v2.23.1 |
-| RabbitMQ Messaging Topology Operator | Vhosts, users, permissions as resources | release manifest | v1.20.4 |
+| Strimzi | Kafka (KRaft) clusters, topics and users as resources | `oci://quay.io/strimzi-helm/strimzi-kafka-operator` | 1.3.0 (Kafka 4.3.1); needs Kubernetes 1.32+ |
 | kube-prometheus-stack, Loki, Alloy | Metrics and logs | see [monitoring/](../monitoring/README.md) | |
 
 Traefik is maintained, cloud-neutral and could also take over generic gateway
@@ -45,9 +44,10 @@ helm upgrade --install cert-manager jetstack/cert-manager --version v1.21.2 \
 helm upgrade --install cnpg cnpg/cloudnative-pg --version 0.29.1 \
   -n cnpg-system --create-namespace
 
-# RabbitMQ operators (the topology operator needs cert-manager)
-kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/download/v2.23.1/cluster-operator.yml
-kubectl apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/download/v1.20.4/messaging-topology-operator-with-certmanager.yaml
+# Kafka operator, watching the CompanyCentral namespaces
+helm upgrade --install strimzi oci://quay.io/strimzi-helm/strimzi-kafka-operator --version 1.3.0 \
+  -n strimzi --create-namespace \
+  --set 'watchNamespaces={companycentral-dev,companycentral-prod}'
 ```
 
 Then create the credentials and deploy:

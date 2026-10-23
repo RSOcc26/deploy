@@ -1,0 +1,131 @@
+# Apache Kafka (KRaft) managed by Strimzi: one cluster per environment, one
+# events topic per producing service, one dead-letter topic per consuming
+# service, and one SCRAM user per client whose ACLs allow writing only its
+# own topics and reading only the topics it consumes. Strimzi stores each
+# user's password in a Secret with the user's name.
+{{- $k := .Values.kafka }}
+{{- $cluster := $k.clusterName }}
+{{- $replicas := int $k.replicas }}
+{{- $rf := min $replicas 3 }}
+{{- $minIsr := ternary 2 1 (ge $rf 3) }}
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+metadata:
+  name: {{ $cluster }}-dual
+  labels:
+    strimzi.io/cluster: {{ $cluster }}
+    app.kubernetes.io/part-of: companycentral
+spec:
+  replicas: {{ $replicas }}
+  roles:
+    - controller
+    - broker
+  storage:
+    type: persistent-claim
+    size: {{ $k.storage.size }}
+    {{- with $k.storage.storageClass }}
+    class: {{ . }}
+    {{- end }}
+    deleteClaim: false
+  resources:
+    {{- toYaml $k.resources | nindent 4 }}
+---
+apiVersion: kafka.strimzi.io/v1
+kind: Kafka
+metadata:
+  name: {{ $cluster }}
+  labels:
+    app.kubernetes.io/part-of: companycentral
+spec:
+  kafka:
+    version: {{ $k.version | quote }}
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+        authentication:
+          type: scram-sha-512
+    authorization:
+      type: simple
+    config:
+      auto.create.topics.enable: false
+      default.replication.factor: {{ $rf }}
+      min.insync.replicas: {{ $minIsr }}
+      offsets.topic.replication.factor: {{ $rf }}
+      transaction.state.log.replication.factor: {{ $rf }}
+      transaction.state.log.min.isr: {{ $minIsr }}
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+{{- range $name, $client := $k.clients }}
+{{- with $client.produces }}
+---
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: {{ . | replace "." "-" }}
+  labels:
+    strimzi.io/cluster: {{ $cluster }}
+spec:
+  topicName: {{ . }}
+  partitions: {{ $k.topics.partitions }}
+  replicas: {{ $rf }}
+  config:
+    retention.ms: {{ mul $k.topics.retentionHours 3600000 | int64 | quote }}
+{{- end }}
+{{- if $client.consumes }}
+---
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: {{ $name }}-dlt
+  labels:
+    strimzi.io/cluster: {{ $cluster }}
+spec:
+  topicName: {{ $name }}.dlt
+  partitions: 1
+  replicas: {{ $rf }}
+  config:
+    retention.ms: {{ mul $k.topics.retentionHours 3600000 | int64 | quote }}
+{{- end }}
+---
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaUser
+metadata:
+  name: kafka-{{ $name }}
+  labels:
+    strimzi.io/cluster: {{ $cluster }}
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      {{- with $client.produces }}
+      - resource:
+          type: topic
+          name: {{ . }}
+          patternType: literal
+        operations: [Write, Describe]
+      {{- end }}
+      {{- range $client.consumes }}
+      - resource:
+          type: topic
+          name: {{ . }}
+          patternType: literal
+        operations: [Read, Describe]
+      {{- end }}
+      {{- if $client.consumes }}
+      - resource:
+          type: topic
+          name: {{ $name }}.dlt
+          patternType: literal
+        operations: [Read, Write, Describe]
+      - resource:
+          type: group
+          name: {{ $name }}
+          patternType: prefix
+        operations: [Read, Describe]
+      {{- end }}
+{{- end }}
