@@ -1,0 +1,9 @@
+# Platform components: development environment (smallest footprint).
+postgres:
+  instances: 1
+  storage:
+    size: 2Gi
+rabbitmq:
+  replicas: 1
+  storage:
+    size: 1Gi

@@ -1,0 +1,12 @@
+# web: production environment.
+
+image:
+  # Immutable release version or commit SHA from GHCR, bumped by a pull
+  # request for each release. Empty until the first image is published;
+  # deploying with an empty tag fails on purpose.
+  tag: ""
+
+replicaCount: 2
+
+env:
+  LOG_LEVEL: info

@@ -1,0 +1,184 @@
+# Local development stack for CompanyCentral.
+#
+#   cp .env.example .env      # then replace every placeholder password
+#   docker compose up -d                    # PostgreSQL and RabbitMQ only
+#   docker compose --profile apps up -d     # plus services, gateway and web
+#
+# The "apps" profile pulls images from GHCR. They exist only after each
+# repository publishes its first image; until then run the services from
+# their own repositories with `npm run dev` against this stack.
+name: companycentral
+
+x-service: &service
+  restart: unless-stopped
+  profiles: [apps]
+  depends_on:
+    postgres:
+      condition: service_healthy
+    rabbitmq-init:
+      condition: service_completed_successfully
+
+x-service-env: &service-env
+  PORT: "3000"
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  RABBITMQ_EXCHANGE: companycentral.events
+  TENANT_CONTEXT_JWKS_URL: http://gateway:8080/.well-known/jwks.json
+  TENANT_CONTEXT_ISSUER: companycentral-gateway
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      SERVICES: identity access workflow inventory production
+      IDENTITY_MIGRATOR_PASSWORD: ${IDENTITY_MIGRATOR_PASSWORD:?}
+      IDENTITY_APP_PASSWORD: ${IDENTITY_APP_PASSWORD:?}
+      ACCESS_MIGRATOR_PASSWORD: ${ACCESS_MIGRATOR_PASSWORD:?}
+      ACCESS_APP_PASSWORD: ${ACCESS_APP_PASSWORD:?}
+      WORKFLOW_MIGRATOR_PASSWORD: ${WORKFLOW_MIGRATOR_PASSWORD:?}
+      WORKFLOW_APP_PASSWORD: ${WORKFLOW_APP_PASSWORD:?}
+      INVENTORY_MIGRATOR_PASSWORD: ${INVENTORY_MIGRATOR_PASSWORD:?}
+      INVENTORY_APP_PASSWORD: ${INVENTORY_APP_PASSWORD:?}
+      PRODUCTION_MIGRATOR_PASSWORD: ${PRODUCTION_MIGRATOR_PASSWORD:?}
+      PRODUCTION_APP_PASSWORD: ${PRODUCTION_APP_PASSWORD:?}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_ADMIN_PASSWORD:?set RABBITMQ_ADMIN_PASSWORD in .env}
+      RABBITMQ_DEFAULT_VHOST: companycentral
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"   # management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  # Creates one RabbitMQ user per service, limited to the companycentral vhost.
+  rabbitmq-init:
+    image: curlimages/curl:8.16.0
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_API: http://rabbitmq:15672/api
+      RABBITMQ_ADMIN_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:?}
+      SERVICES: identity access workflow inventory production
+      IDENTITY_MQ_PASSWORD: ${IDENTITY_MQ_PASSWORD:?}
+      ACCESS_MQ_PASSWORD: ${ACCESS_MQ_PASSWORD:?}
+      WORKFLOW_MQ_PASSWORD: ${WORKFLOW_MQ_PASSWORD:?}
+      INVENTORY_MQ_PASSWORD: ${INVENTORY_MQ_PASSWORD:?}
+      PRODUCTION_MQ_PASSWORD: ${PRODUCTION_MQ_PASSWORD:?}
+    volumes:
+      - ./rabbitmq/init-users.sh:/init-users.sh:ro
+    entrypoint: ["/bin/sh", "/init-users.sh"]
+
+  service-identity:
+    <<: *service
+    image: ghcr.io/rsocc26/service-identity:${IMAGE_TAG:-main}
+    environment:
+      <<: *service-env
+      DATABASE_URL: postgres://identity_app:${IDENTITY_APP_PASSWORD}@postgres:5432/identity
+      DATABASE_MIGRATION_URL: postgres://identity_migrator:${IDENTITY_MIGRATOR_PASSWORD}@postgres:5432/identity
+      RABBITMQ_URL: amqp://identity:${IDENTITY_MQ_PASSWORD}@rabbitmq:5672/companycentral
+      TENANT_CONTEXT_AUDIENCE: service-identity
+    ports: ["127.0.0.1:3001:3000"]
+
+  service-access:
+    <<: *service
+    image: ghcr.io/rsocc26/service-access:${IMAGE_TAG:-main}
+    environment:
+      <<: *service-env
+      DATABASE_URL: postgres://access_app:${ACCESS_APP_PASSWORD}@postgres:5432/access
+      DATABASE_MIGRATION_URL: postgres://access_migrator:${ACCESS_MIGRATOR_PASSWORD}@postgres:5432/access
+      RABBITMQ_URL: amqp://access:${ACCESS_MQ_PASSWORD}@rabbitmq:5672/companycentral
+      TENANT_CONTEXT_AUDIENCE: service-access
+    ports: ["127.0.0.1:3002:3000"]
+
+  service-workflow:
+    <<: *service
+    image: ghcr.io/rsocc26/service-workflow:${IMAGE_TAG:-main}
+    environment:
+      <<: *service-env
+      DATABASE_URL: postgres://workflow_app:${WORKFLOW_APP_PASSWORD}@postgres:5432/workflow
+      DATABASE_MIGRATION_URL: postgres://workflow_migrator:${WORKFLOW_MIGRATOR_PASSWORD}@postgres:5432/workflow
+      RABBITMQ_URL: amqp://workflow:${WORKFLOW_MQ_PASSWORD}@rabbitmq:5672/companycentral
+      TENANT_CONTEXT_AUDIENCE: service-workflow
+    ports: ["127.0.0.1:3003:3000"]
+
+  service-inventory:
+    <<: *service
+    image: ghcr.io/rsocc26/service-inventory:${IMAGE_TAG:-main}
+    environment:
+      <<: *service-env
+      DATABASE_URL: postgres://inventory_app:${INVENTORY_APP_PASSWORD}@postgres:5432/inventory
+      DATABASE_MIGRATION_URL: postgres://inventory_migrator:${INVENTORY_MIGRATOR_PASSWORD}@postgres:5432/inventory
+      RABBITMQ_URL: amqp://inventory:${INVENTORY_MQ_PASSWORD}@rabbitmq:5672/companycentral
+      TENANT_CONTEXT_AUDIENCE: service-inventory
+    ports: ["127.0.0.1:3004:3000"]
+
+  service-production:
+    <<: *service
+    image: ghcr.io/rsocc26/service-production:${IMAGE_TAG:-main}
+    environment:
+      <<: *service-env
+      DATABASE_URL: postgres://production_app:${PRODUCTION_APP_PASSWORD}@postgres:5432/production
+      DATABASE_MIGRATION_URL: postgres://production_migrator:${PRODUCTION_MIGRATOR_PASSWORD}@postgres:5432/production
+      RABBITMQ_URL: amqp://production:${PRODUCTION_MQ_PASSWORD}@rabbitmq:5672/companycentral
+      TENANT_CONTEXT_AUDIENCE: service-production
+      INVENTORY_URL: http://service-inventory:3000
+    ports: ["127.0.0.1:3005:3000"]
+
+  gateway:
+    image: ghcr.io/rsocc26/gateway:${IMAGE_TAG:-main}
+    restart: unless-stopped
+    profiles: [apps]
+    environment:
+      PORT: "8080"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      IDENTITY_URL: http://service-identity:3000
+      ACCESS_URL: http://service-access:3000
+      WORKFLOW_URL: http://service-workflow:3000
+      INVENTORY_URL: http://service-inventory:3000
+      PRODUCTION_URL: http://service-production:3000
+      TENANT_CONTEXT_ISSUER: companycentral-gateway
+      TENANT_CONTEXT_SIGNING_KEY_FILE: /run/secrets/tenant-context-key
+    secrets:
+      - tenant-context-key
+    ports: ["127.0.0.1:8080:8080"]
+
+  web:
+    image: ghcr.io/rsocc26/web:${IMAGE_TAG:-main}
+    restart: unless-stopped
+    profiles: [apps]
+    environment:
+      API_BASE_PATH: /api
+      DEFAULT_LOCALE: sl
+    ports: ["127.0.0.1:8081:8080"]
+
+secrets:
+  tenant-context-key:
+    # Generate locally (see README); the file is git-ignored.
+    file: ./.local/tenant-context-key.pem
+
+volumes:
+  postgres-data:
+  rabbitmq-data:

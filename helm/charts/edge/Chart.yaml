@@ -1,0 +1,5 @@
+apiVersion: v2
+name: edge
+description: Public entry point for one CompanyCentral environment - Ingress, TLS certificate issuer.
+type: application
+version: 0.1.0

@@ -1,0 +1,32 @@
+# Environment and secrets — commit only .env.example
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+kubeconfig*
+secrets/
+
+# Helm
+helm/charts/*/charts/
+helm/charts/*/Chart.lock
+*.tgz
+
+# Terraform (planned)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+# Local runtime data
+.local/
+.tmp/
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

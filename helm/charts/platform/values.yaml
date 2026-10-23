@@ -1,0 +1,40 @@
+# Stateful platform components for one environment (namespace).
+# Requires the CloudNativePG operator, the RabbitMQ Cluster Operator and the
+# RabbitMQ Messaging Topology Operator (see k8s/README.md).
+# Credentials are Secrets created by scripts/create-secrets.sh, never values.
+
+# Services that get their own database, database roles and RabbitMQ user.
+services:
+  - identity
+  - access
+  - workflow
+  - inventory
+  - production
+
+postgres:
+  clusterName: companycentral-pg
+  instances: 1
+  storage:
+    size: 5Gi
+    # Empty: the cluster's default StorageClass.
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+rabbitmq:
+  clusterName: companycentral-mq
+  replicas: 1
+  vhost: companycentral
+  storage:
+    size: 2Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi

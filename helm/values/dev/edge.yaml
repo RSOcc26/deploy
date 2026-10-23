@@ -1,0 +1,6 @@
+# Public entry point: development environment.
+# Set at deploy time: --set host=<dev host> --set clusterIssuer.email=<e-mail>
+clusterIssuer:
+  name: letsencrypt-staging
+  create: true
+  server: https://acme-staging-v02.api.letsencrypt.org/directory

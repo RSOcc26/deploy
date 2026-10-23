@@ -1,0 +1,8 @@
+# Public entry point: production environment.
+# Set at deploy time: --set host=<public host> --set clusterIssuer.email=<e-mail>
+tls:
+  secretName: companycentral-tls
+clusterIssuer:
+  name: letsencrypt-prod
+  create: true
+  server: https://acme-v02.api.letsencrypt.org/directory

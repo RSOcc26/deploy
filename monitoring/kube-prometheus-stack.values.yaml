@@ -1,0 +1,40 @@
+# Values for prometheus-community/kube-prometheus-stack (chart 92.11.0).
+#   helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+#     --version 92.11.0 -n monitoring -f monitoring/kube-prometheus-stack.values.yaml
+
+prometheus:
+  prometheusSpec:
+    # Pick up the ServiceMonitors from our Helm releases in every namespace,
+    # not only those labelled for this release.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    retention: 7d
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 10Gi
+
+alertmanager:
+  # No alert routing yet; enable when there is somewhere to send alerts.
+  enabled: false
+
+grafana:
+  # The admin password comes from an existing Secret, never from values:
+  #   kubectl -n monitoring create secret generic grafana-admin \
+  #     --from-literal=admin-user=admin --from-literal=admin-password="$(openssl rand -hex 16)"
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki-gateway.monitoring.svc
+      access: proxy

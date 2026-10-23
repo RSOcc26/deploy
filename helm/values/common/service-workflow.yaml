@@ -1,0 +1,23 @@
+# service-workflow: values shared by every environment.
+image:
+  repository: ghcr.io/rsocc26/service-workflow
+
+env:
+  PORT: "3000"
+  RABBITMQ_EXCHANGE: companycentral.events
+  TENANT_CONTEXT_JWKS_URL: http://gateway/.well-known/jwks.json
+  TENANT_CONTEXT_ISSUER: companycentral-gateway
+  TENANT_CONTEXT_AUDIENCE: service-workflow
+
+# Created outside Git; see docs/deployment.md.
+secretEnv:
+  DATABASE_URL:
+    secretName: workflow-database
+    key: url
+  RABBITMQ_URL:
+    secretName: workflow-rabbitmq
+    key: url
+
+migrations:
+  secretName: workflow-database
+  key: migration-url

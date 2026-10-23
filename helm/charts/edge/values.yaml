@@ -1,0 +1,31 @@
+# Public host name of this environment, for example companycentral.example.org.
+# Required; DNS must point to the Ingress controller's load balancer.
+host: ""
+
+# Ingress controller class. Traefik is the suggested controller (k8s/README.md);
+# any controller that implements networking.k8s.io/v1 Ingress works.
+ingressClassName: traefik
+
+tls:
+  enabled: true
+  secretName: companycentral-tls
+
+# cert-manager ClusterIssuer for Let's Encrypt (HTTP-01 challenge).
+clusterIssuer:
+  # Name of the ClusterIssuer the certificate is requested from.
+  name: letsencrypt-staging
+  # Create the ClusterIssuer in this release. Cluster-scoped: create each
+  # issuer name in one release only.
+  create: false
+  # ACME account e-mail; required when create is true.
+  email: ""
+  server: https://acme-staging-v02.api.letsencrypt.org/directory
+
+# Only web and the gateway are reachable from outside (organization ADR-0008).
+backends:
+  web:
+    service: web
+    port: 80
+  gateway:
+    service: gateway
+    port: 80

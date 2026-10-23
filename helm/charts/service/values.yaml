@@ -1,0 +1,87 @@
+# Defaults for one CompanyCentral workload. Per-workload values live in
+# helm/values/common/<name>.yaml, per-environment overrides in
+# helm/values/<env>/<name>.yaml.
+
+nameOverride: ""
+
+image:
+  # ghcr.io/rsocc26/<repository>
+  repository: ""
+  # Required. Use the commit SHA or a release version; never "latest".
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+replicaCount: 1
+
+containerPort: 3000
+
+service:
+  port: 80
+
+# Non-secret configuration, rendered into a ConfigMap and passed as env vars.
+env: {}
+
+# Secret configuration: env var name -> existing Secret and key.
+# Secrets are created outside Git (see docs/deployment.md).
+secretEnv: {}
+#  DATABASE_URL:
+#    secretName: workflow-database
+#    key: url
+
+probes:
+  liveness:
+    path: /health/live
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /health/ready
+    initialDelaySeconds: 2
+    periodSeconds: 5
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ALL]
+
+# Writable scratch space; readOnlyRootFilesystem is on.
+extraVolumes:
+  - name: tmp
+    emptyDir: {}
+extraVolumeMounts:
+  - name: tmp
+    mountPath: /tmp
+
+podAnnotations: {}
+
+metrics:
+  # Requires the Prometheus Operator CRDs (kube-prometheus-stack).
+  serviceMonitor:
+    enabled: false
+    path: /metrics
+    interval: 30s
+
+# Runs database migrations before install and upgrade, using the
+# migration role. Enable once the image provides the command.
+migrations:
+  enabled: false
+  command: ["npm", "run", "migrate"]
+  # Secret holding DATABASE_MIGRATION_URL for the migration role.
+  secretName: ""
+  key: migration-url

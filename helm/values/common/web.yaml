@@ -1,0 +1,29 @@
+# web: values shared by every environment.
+# Static React build served by an unprivileged nginx on port 8080.
+image:
+  repository: ghcr.io/rsocc26/web
+
+containerPort: 8080
+
+env:
+  API_BASE_PATH: /api
+  DEFAULT_LOCALE: sl
+
+probes:
+  liveness:
+    path: /
+    initialDelaySeconds: 2
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /
+    initialDelaySeconds: 1
+    periodSeconds: 5
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    memory: 64Mi

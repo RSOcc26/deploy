@@ -1,0 +1,14 @@
+# service-production: development environment.
+image:
+  # Moving branch tag published from main; fine for dev only.
+  tag: main
+  pullPolicy: Always
+
+replicaCount: 1
+
+env:
+  LOG_LEVEL: debug
+
+metrics:
+  serviceMonitor:
+    enabled: true

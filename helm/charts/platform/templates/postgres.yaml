@@ -1,0 +1,49 @@
+# One PostgreSQL cluster per environment, with a separate database and
+# separate roles per service (organization ADR-0003). Each service gets a
+# migration role that owns its database and a runtime role without BYPASSRLS
+# (ADR-0004). Table privileges for the runtime role are granted by the
+# service's own migrations.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .Values.postgres.clusterName }}
+  labels:
+    app.kubernetes.io/part-of: companycentral
+spec:
+  instances: {{ .Values.postgres.instances }}
+  storage:
+    size: {{ .Values.postgres.storage.size }}
+    {{- with .Values.postgres.storage.storageClass }}
+    storageClass: {{ . }}
+    {{- end }}
+  resources:
+    {{- toYaml .Values.postgres.resources | nindent 4 }}
+  managed:
+    roles:
+      {{- range .Values.services }}
+      - name: {{ . }}_migrator
+        ensure: present
+        login: true
+        passwordSecret:
+          name: pg-{{ . }}-migrator
+      - name: {{ . }}_app
+        ensure: present
+        login: true
+        bypassrls: false
+        passwordSecret:
+          name: pg-{{ . }}-app
+      {{- end }}
+{{- range .Values.services }}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: {{ $.Values.postgres.clusterName }}-{{ . }}
+  labels:
+    app.kubernetes.io/part-of: companycentral
+spec:
+  name: {{ . }}
+  owner: {{ . }}_migrator
+  cluster:
+    name: {{ $.Values.postgres.clusterName }}
+{{- end }}

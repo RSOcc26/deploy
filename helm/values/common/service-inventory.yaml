@@ -1,0 +1,23 @@
+# service-inventory: values shared by every environment.
+image:
+  repository: ghcr.io/rsocc26/service-inventory
+
+env:
+  PORT: "3000"
+  RABBITMQ_EXCHANGE: companycentral.events
+  TENANT_CONTEXT_JWKS_URL: http://gateway/.well-known/jwks.json
+  TENANT_CONTEXT_ISSUER: companycentral-gateway
+  TENANT_CONTEXT_AUDIENCE: service-inventory
+
+# Created outside Git; see docs/deployment.md.
+secretEnv:
+  DATABASE_URL:
+    secretName: inventory-database
+    key: url
+  RABBITMQ_URL:
+    secretName: inventory-rabbitmq
+    key: url
+
+migrations:
+  secretName: inventory-database
+  key: migration-url

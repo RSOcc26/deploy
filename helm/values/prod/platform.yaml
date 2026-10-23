@@ -1,0 +1,11 @@
+# Platform components: production environment.
+# Two PostgreSQL instances give a streaming replica and automatic failover.
+# RabbitMQ stays at one replica until the cluster has three nodes.
+postgres:
+  instances: 2
+  storage:
+    size: 10Gi
+rabbitmq:
+  replicas: 1
+  storage:
+    size: 5Gi

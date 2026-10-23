@@ -1,0 +1,29 @@
+# gateway: values shared by every environment.
+image:
+  repository: ghcr.io/rsocc26/gateway
+
+containerPort: 8080
+
+env:
+  PORT: "8080"
+  IDENTITY_URL: http://service-identity
+  ACCESS_URL: http://service-access
+  WORKFLOW_URL: http://service-workflow
+  INVENTORY_URL: http://service-inventory
+  PRODUCTION_URL: http://service-production
+  TENANT_CONTEXT_ISSUER: companycentral-gateway
+  TENANT_CONTEXT_SIGNING_KEY_FILE: /var/run/secrets/companycentral/tenant-context-key.pem
+
+extraVolumes:
+  - name: tmp
+    emptyDir: {}
+  # Created outside Git; see docs/deployment.md.
+  - name: tenant-context-key
+    secret:
+      secretName: gateway-tenant-context-key
+extraVolumeMounts:
+  - name: tmp
+    mountPath: /tmp
+  - name: tenant-context-key
+    mountPath: /var/run/secrets/companycentral
+    readOnly: true
