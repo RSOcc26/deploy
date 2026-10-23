@@ -71,3 +71,7 @@ docker compose -f compose/compose.yaml --env-file compose/.env.example config -q
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
 - Pull requests need a review from a code owner and passing checks; they are squash-merged.
 - Record notable changes in `CHANGELOG.md`.
+
+## License
+
+[MIT](LICENSE)
