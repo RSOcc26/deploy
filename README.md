@@ -2,7 +2,7 @@
 
 Infrastructure and deployment configuration for **CompanyCentral**: local
 Docker Compose, Kubernetes bootstrap, Helm charts, per-environment values,
-PostgreSQL and RabbitMQ, Ingress and TLS, monitoring and logging.
+PostgreSQL and Apache Kafka, Ingress and TLS, monitoring and logging.
 
 Part of **CompanyCentral**, a multi-tenant, cloud-native platform built for
 the *Cloud Computing Services* course (RSO 2026/27, FRI UL).
@@ -21,15 +21,15 @@ hold no deployment configuration (see the
 
 ```
 compose/              local development stack (Docker Compose)
-  compose.yaml        PostgreSQL, RabbitMQ; services, gateway and web under the "apps" profile
+  compose.yaml        PostgreSQL, Kafka; services, gateway and web under the "apps" profile
   .env.example        local credentials (placeholders)
   postgres/init/      creates one database, migration role and runtime role per service
-  rabbitmq/           creates one RabbitMQ user per service
+  kafka/              creates the event and dead-letter topics
 k8s/                  one-time cluster bootstrap: namespaces, Ingress controller, operators
 helm/
   charts/
     service/          generic chart for every service, the gateway and web
-    platform/         PostgreSQL (CloudNativePG) and RabbitMQ per environment
+    platform/         PostgreSQL (CloudNativePG) and Kafka (Strimzi) per environment
     edge/             Ingress, TLS (cert-manager ClusterIssuer)
   values/
     common/           per workload, shared by all environments
@@ -51,7 +51,7 @@ docs/
 ```sh
 cd compose
 cp .env.example .env                 # replace every placeholder
-docker compose up -d                 # PostgreSQL :5432, RabbitMQ :5672 (UI :15672)
+docker compose up -d                 # PostgreSQL :5432, Kafka :9094
 ```
 
 Run a service from its own repository against this stack, using the URLs in

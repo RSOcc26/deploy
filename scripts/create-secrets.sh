@@ -2,6 +2,8 @@
 # Generates random credentials for one environment and stores them as
 # Kubernetes Secrets in its namespace. Nothing is written to disk or Git.
 # Existing Secrets are never overwritten, so it is safe to run again.
+# Kafka credentials are not created here: Strimzi generates a Secret
+# kafka-<client> with the password of each KafkaUser.
 #
 # Usage: scripts/create-secrets.sh <namespace>
 # Requires: kubectl (pointing at the right cluster), openssl.
@@ -10,7 +12,6 @@ set -euo pipefail
 ns=${1:?usage: scripts/create-secrets.sh <namespace>}
 services=(identity access workflow inventory production)
 pg_host="companycentral-pg-rw.${ns}.svc"
-mq_host="companycentral-mq.${ns}.svc"
 
 exists() { kubectl -n "$ns" get secret "$1" >/dev/null 2>&1; }
 random() { openssl rand -hex 24; }
@@ -24,7 +25,6 @@ for svc in "${services[@]}"; do
   fi
   migrator_pw=$(random)
   app_pw=$(random)
-  mq_pw=$(random)
 
   # Role credentials read by CloudNativePG (managed roles).
   kubectl -n "$ns" create secret generic "pg-${svc}-migrator" --type=kubernetes.io/basic-auth \
@@ -37,12 +37,6 @@ for svc in "${services[@]}"; do
   kubectl -n "$ns" create secret generic "${svc}-database" \
     --from-file=url=<(printf 'postgres://%s_app:%s@%s:5432/%s' "$svc" "$app_pw" "$pg_host" "$svc") \
     --from-file=migration-url=<(printf 'postgres://%s_migrator:%s@%s:5432/%s' "$svc" "$migrator_pw" "$pg_host" "$svc")
-
-  # RabbitMQ user (Messaging Topology Operator) and the service's URL.
-  kubectl -n "$ns" create secret generic "mq-${svc}-credentials" \
-    --from-literal=username="$svc" --from-file=password=<(printf %s "$mq_pw")
-  kubectl -n "$ns" create secret generic "${svc}-rabbitmq" \
-    --from-file=url=<(printf 'amqp://%s:%s@%s:5672/companycentral' "$svc" "$mq_pw" "$mq_host")
 
   echo "${svc}: secrets created"
 done

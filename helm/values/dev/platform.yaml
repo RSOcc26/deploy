@@ -3,7 +3,7 @@ postgres:
   instances: 1
   storage:
     size: 2Gi
-rabbitmq:
+kafka:
   replicas: 1
   storage:
-    size: 1Gi
+    size: 2Gi
