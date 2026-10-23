@@ -14,8 +14,8 @@ See the [architecture](https://github.com/RSOcc26/.github/blob/main/docs/archite
 > service images exist and no cluster has been provisioned.
 
 This repository holds **no application code**, and application repositories
-hold no deployment configuration (organization
-[ADR-0009](https://github.com/RSOcc26/.github/blob/main/docs/adr/0009-kubernetes-helm-ghcr.md)).
+hold no deployment configuration (see the
+[architecture, §8](https://github.com/RSOcc26/.github/blob/main/docs/architecture.md#8-deployment)).
 
 ## Layout
 

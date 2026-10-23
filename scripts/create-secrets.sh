@@ -47,7 +47,7 @@ for svc in "${services[@]}"; do
   echo "${svc}: secrets created"
 done
 
-# Key the gateway signs the tenant context with (organization ADR-0008).
+# Key the gateway signs the tenant context with (organization ADR-0001).
 if exists gateway-tenant-context-key; then
   echo "gateway: signing key exists, skipped"
 else

@@ -1,4 +1,4 @@
-# RabbitMQ broker with one vhost and one user per service (ADR-0006).
+# RabbitMQ broker with one vhost and one user per service.
 apiVersion: rabbitmq.com/v1beta1
 kind: RabbitmqCluster
 metadata:
