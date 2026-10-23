@@ -1,0 +1,54 @@
+# Validates the deployment configuration: Helm charts with every
+# environment's values, rendered manifests against Kubernetes and CRD
+# schemas, and the Compose file. Complements the organization's shared CI.
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  helm:
+    name: Helm charts
+    runs-on: ubuntu-latest
+    env:
+      KUBECONFORM_VERSION: v0.8.0
+      KUBECONFORM_SHA256: 9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v4.3.1
+      - name: Lint and render
+        run: RENDER_DIR="$RUNNER_TEMP/rendered" scripts/lint.sh
+      - name: Install kubeconform
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/kubeconform.tgz" \
+            "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_SHA256}  $RUNNER_TEMP/kubeconform.tgz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/kubeconform.tgz" -C "$RUNNER_TEMP" kubeconform
+      - name: Validate manifests
+        run: |
+          "$RUNNER_TEMP/kubeconform" -strict -summary \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            "$RUNNER_TEMP"/rendered/*.yaml
+
+  compose:
+    name: Compose file
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate (infrastructure and apps profile)
+        working-directory: compose
+        run: |
+          docker compose --env-file .env.example config -q
+          docker compose --env-file .env.example --profile apps config -q
