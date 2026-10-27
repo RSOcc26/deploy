@@ -1,7 +1,7 @@
 # Local development stack for CompanyCentral.
 #
 #   cp .env.example .env      # then replace every placeholder password
-#   docker compose up -d                    # PostgreSQL and Kafka only
+#   docker compose up -d                    # PostgreSQL, Kafka and Keycloak only
 #   docker compose --profile apps up -d     # plus services, gateway and web
 #
 # The "apps" profile pulls images from GHCR. They exist only after each
@@ -99,6 +99,23 @@ services:
     volumes:
       - ./kafka/create-topics.sh:/create-topics.sh:ro
     entrypoint: ["/bin/sh", "/create-topics.sh"]
+
+  # Keycloak, the OIDC provider (ADR-0002), in dev mode with its file database.
+  # Imports the companycentral realm on first start; admin console at
+  # http://localhost:8180 (user admin, password from .env).
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_HOSTNAME: http://localhost:8180
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:8180:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./keycloak/companycentral-realm.json:/opt/keycloak/data/import/companycentral-realm.json:ro
 
   service-identity:
     <<: *service
@@ -210,3 +227,4 @@ secrets:
 
 volumes:
   postgres-data:
+  keycloak-data:
