@@ -36,7 +36,7 @@ dev and prod may share one cluster to save cost.
 ```sh
 cd compose
 cp .env.example .env        # replace every placeholder password
-docker compose up -d        # PostgreSQL and Kafka
+docker compose up -d        # PostgreSQL, Kafka and Keycloak
 docker compose ps           # wait until healthy
 ```
 
@@ -49,6 +49,13 @@ docker compose ps           # wait until healthy
   `<service>.events` and `<service>.dlt` topics. Inspect them with
   `docker compose exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list`.
   Broker data is not persisted across container recreation.
+- Keycloak on `localhost:8180`, dev mode with its own file database in the
+  `keycloak-data` volume. The `companycentral` realm (self-registration,
+  sl/en, public `web` client with PKCE) is imported from
+  `keycloak/companycentral-realm.json` on first start only; later edits to the
+  file need `docker compose rm -sf keycloak && docker volume rm companycentral_keycloak-data`.
+  Admin console: `localhost:8180/admin`, user `admin`, password
+  `KEYCLOAK_ADMIN_PASSWORD` from `compose/.env` (master realm, infrastructure only).
 - Run services from their repositories with their `.env` pointing here, using
   the passwords from `compose/.env`.
 

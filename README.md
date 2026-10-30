@@ -21,10 +21,11 @@ hold no deployment configuration (see the
 
 ```
 compose/              local development stack (Docker Compose)
-  compose.yaml        PostgreSQL, Kafka; services, gateway and web under the "apps" profile
+  compose.yaml        PostgreSQL, Kafka, Keycloak; services, gateway and web under the "apps" profile
   .env.example        local credentials (placeholders)
   postgres/init/      creates one database, migration role and runtime role per service
   kafka/              creates the event and dead-letter topics
+  keycloak/           OIDC realm (companycentral) imported on first start
 k8s/                  one-time cluster bootstrap: namespaces, Ingress controller, operators
 helm/
   charts/
@@ -51,7 +52,7 @@ docs/
 ```sh
 cd compose
 cp .env.example .env                 # replace every placeholder
-docker compose up -d                 # PostgreSQL :5432, Kafka :9094
+docker compose up -d                 # PostgreSQL :5432, Kafka :9094, Keycloak :8180
 ```
 
 Run a service from its own repository against this stack, using the URLs in

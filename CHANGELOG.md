@@ -9,3 +9,5 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ### Added
 
 - Initial repository scaffold.
+- Keycloak (OIDC provider, ADR-0002) in the local Compose stack with the
+  `companycentral` realm and the public `web` client.
