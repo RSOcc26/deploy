@@ -103,6 +103,8 @@ services:
   # Keycloak, the OIDC provider (ADR-0002), in dev mode with its file database.
   # Imports the companycentral realm on first start; admin console at
   # http://localhost:8180 (user admin, password from .env).
+  # The CompanyCentral login theme is mounted from ./keycloak/themes; dev mode
+  # does not cache themes, so edits show on the next page load.
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.1
     restart: unless-stopped
@@ -116,6 +118,7 @@ services:
     volumes:
       - keycloak-data:/opt/keycloak/data
       - ./keycloak/companycentral-realm.json:/opt/keycloak/data/import/companycentral-realm.json:ro
+      - ./keycloak/themes/companycentral:/opt/keycloak/themes/companycentral:ro
 
   service-identity:
     <<: *service
@@ -127,6 +130,10 @@ services:
       KAFKA_CLIENT_ID: service-identity
       KAFKA_TOPIC: identity.events
       TENANT_CONTEXT_AUDIENCE: service-identity
+      IDP_ADMIN_URL: http://keycloak:8080/admin/realms/companycentral
+      IDP_TOKEN_URL: http://keycloak:8080/realms/companycentral/protocol/openid-connect/token
+      IDP_CLIENT_ID: service-identity
+      IDP_CLIENT_SECRET: ${IDENTITY_IDP_CLIENT_SECRET:-}
     ports: ["127.0.0.1:3001:3000"]
 
   service-access:
@@ -204,6 +211,10 @@ services:
       PRODUCTION_URL: http://service-production:3000
       TENANT_CONTEXT_ISSUER: companycentral-gateway
       TENANT_CONTEXT_SIGNING_KEY_FILE: /run/secrets/tenant-context-key
+      # Tokens are issued for the browser's URL; keys are fetched inside the network
+      OIDC_ISSUER: http://localhost:8180/realms/companycentral
+      OIDC_AUDIENCE: gateway
+      OIDC_JWKS_URL: http://keycloak:8080/realms/companycentral/protocol/openid-connect/certs
       KAFKA_BROKERS: kafka:9092
       KAFKA_GROUP_ID: gateway
       KAFKA_CONSUME_TOPICS: identity.events,access.events
@@ -218,6 +229,8 @@ services:
     environment:
       API_BASE_PATH: /api
       DEFAULT_LOCALE: sl
+      OIDC_AUTHORITY: http://localhost:8180/realms/companycentral
+      OIDC_CLIENT_ID: web
     ports: ["127.0.0.1:8081:8080"]
 
 secrets:

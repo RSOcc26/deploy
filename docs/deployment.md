@@ -54,6 +54,11 @@ docker compose ps           # wait until healthy
   sl/en, public `web` client with PKCE) is imported from
   `keycloak/companycentral-realm.json` on first start only; later edits to the
   file need `docker compose rm -sf keycloak && docker volume rm companycentral_keycloak-data`.
+  The realm also has the `gateway` audience mapper, the `platform-admin` role,
+  the confidential `service-identity` client (ADR-0003) and the login theme
+  `keycloak/themes/companycentral`. An existing volume does not pick these up:
+  recreate it or set them by hand. Copy the `service-identity` client secret
+  (Clients, Credentials) into `IDENTITY_IDP_CLIENT_SECRET` in `compose/.env`.
   Admin console: `localhost:8180/admin`, user `admin`, password
   `KEYCLOAK_ADMIN_PASSWORD` from `compose/.env` (master realm, infrastructure only).
 - Run services from their repositories with their `.env` pointing here, using
