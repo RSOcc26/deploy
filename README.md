@@ -9,7 +9,9 @@ the *Cloud Computing Services* course (RSO 2026/27, FRI UL).
 See the [architecture](https://github.com/RSOcc26/.github/blob/main/docs/architecture.md) and the
 [RSOcc26 organization](https://github.com/RSOcc26) for the other repositories.
 
-> **Status:** scaffold. The Compose file and Helm charts validate (`docker
+> **Status:** the local Compose stack works (PostgreSQL, Kafka and Keycloak with
+> the `companycentral` realm and login theme). Helm charts and cluster
+> configuration are scaffold: the Compose file and Helm charts validate (`docker
 > compose config`, `helm lint`, kubeconform). Nothing is deployed yet: no
 > service images exist and no cluster has been provisioned.
 
@@ -25,7 +27,8 @@ compose/              local development stack (Docker Compose)
   .env.example        local credentials (placeholders)
   postgres/init/      creates one database, migration role and runtime role per service
   kafka/              creates the event and dead-letter topics
-  keycloak/           OIDC realm (companycentral) imported on first start
+  keycloak/           OIDC realm (companycentral) imported on first start,
+                      and themes/companycentral, our login theme (mounted)
 k8s/                  one-time cluster bootstrap: namespaces, Ingress controller, operators
 helm/
   charts/
@@ -54,6 +57,23 @@ cd compose
 cp .env.example .env                 # replace every placeholder
 docker compose up -d                 # PostgreSQL :5432, Kafka :9094, Keycloak :8180
 ```
+
+Then finish the Keycloak setup:
+
+1. **Login theme:** `keycloak/themes/companycentral` is mounted into Keycloak and
+   referenced by the realm, so nothing to do on a fresh volume.
+2. **`service-identity` client secret:** open the admin console
+   (`localhost:8180/admin`, user `admin`, password `KEYCLOAK_ADMIN_PASSWORD`),
+   realm `companycentral`, Clients, `service-identity`, Credentials. Copy the
+   secret into `IDENTITY_IDP_CLIENT_SECRET` in `compose/.env` (and into
+   `IDP_CLIENT_SECRET` in `service-identity/.env`).
+3. **Existing Keycloak volume:** the realm JSON is imported on first start only.
+   If the `keycloak-data` volume already exists, either recreate it
+   (`docker compose rm -sf keycloak && docker volume rm companycentral_keycloak-data`,
+   which deletes local accounts) or set by hand in the admin console: the login
+   theme (Realm settings, Themes), the `gateway` audience mapper on the `web`
+   client, the `platform-admin` realm role and the confidential `service-identity`
+   client.
 
 Run a service from its own repository against this stack, using the URLs in
 that repository's `.env.example`. Full instructions, including the `apps`
