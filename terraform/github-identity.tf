@@ -4,27 +4,30 @@
 # which Azure trusts through the federated credentials below; no secret exists.
 
 locals {
-  github_org = "RSOcc26"
+  # GitHub's subject names the owner and repository with their numeric IDs
+  # ("repo:RSOcc26@<org-id>/<repo>@<repo-id>:..."), so a repository deleted and
+  # recreated under the same name is not trusted. IDs: gh api repos/RSOcc26/<repo> -q .id
+  github_owner = "RSOcc26@345155378"
 
   # Repositories whose CD job deploys to the cluster (.github#26)
-  deploying_repos = [
-    "gateway",
-    "web",
-    "service-identity",
-    "service-access",
-    "service-workflow",
-    "service-inventory",
-    "service-production",
-  ]
+  deploying_repos = {
+    "gateway"            = 1428425800
+    "web"                = 1428425580
+    "service-identity"   = 1428407908
+    "service-access"     = 1428408036
+    "service-workflow"   = 1430868946
+    "service-inventory"  = 1430869228
+    "service-production" = 1430869327
+  }
 
-  # GitHub sets the token subject from the job: "environment:<name>" when the
-  # job has an environment, "pull_request" for PR runs.
+  # GitHub sets the end of the subject from the job: "environment:<name>" when
+  # the job has an environment, "pull_request" for PR runs.
   federated_subjects = merge(
     {
-      for pair in setproduct(local.deploying_repos, ["dev", "prod"]) :
-      "${pair[0]}-${pair[1]}" => "repo:${local.github_org}/${pair[0]}:environment:${pair[1]}"
+      for pair in setproduct(keys(local.deploying_repos), ["dev", "prod"]) :
+      "${pair[0]}-${pair[1]}" => "repo:${local.github_owner}/${pair[0]}@${local.deploying_repos[pair[0]]}:environment:${pair[1]}"
     },
-    { "deploy-pr" = "repo:${local.github_org}/deploy:pull_request" },
+    { "deploy-pr" = "repo:${local.github_owner}/deploy@1430878369:pull_request" },
   )
 }
 
