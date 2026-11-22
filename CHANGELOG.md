@@ -21,8 +21,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   login-flow page. Set as the realm's `loginTheme`; mounted read-only in
   Compose. Keycloak still handles all credentials.
 - Realm: `platform-admin` role and the confidential `service-identity` client
-  whose service account may manage users (ADR-0003). Its secret is generated
-  by Keycloak; copy it to `IDENTITY_IDP_CLIENT_SECRET` in `.env`.
+  whose service account may manage users (ADR-0003). Its secret is set on
+  import from `IDENTITY_IDP_CLIENT_SECRET` in `.env`.
 - Realm: public `api-docs` client (authorization code + PKCE, audience
   `gateway`) for the gateway's Swagger UI; redirect
   `http://localhost:8080/api-docs/ui/static/oauth2-redirect.html`.

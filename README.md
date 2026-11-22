@@ -62,18 +62,17 @@ Then finish the Keycloak setup:
 
 1. **Login theme:** `keycloak/themes/companycentral` is mounted into Keycloak and
    referenced by the realm, so nothing to do on a fresh volume.
-2. **`service-identity` client secret:** open the admin console
-   (`localhost:8180/admin`, user `admin`, password `KEYCLOAK_ADMIN_PASSWORD`),
-   realm `companycentral`, Clients, `service-identity`, Credentials. Copy the
-   secret into `IDENTITY_IDP_CLIENT_SECRET` in `compose/.env` (and into
-   `IDP_CLIENT_SECRET` in `service-identity/.env`).
+2. **`service-identity` client secret:** the realm import sets it from
+   `IDENTITY_IDP_CLIENT_SECRET` in `compose/.env`. When you run
+   `service-identity` from its own repository, put the same value into
+   `IDP_CLIENT_SECRET` in `service-identity/.env`.
 3. **Existing Keycloak volume:** the realm JSON is imported on first start only.
    If the `keycloak-data` volume already exists, either recreate it
    (`docker compose rm -sf keycloak && docker volume rm companycentral_keycloak-data`,
    which deletes local accounts) or set by hand in the admin console: the login
    theme (Realm settings, Themes), the `gateway` audience mapper on the `web`
    client, the `platform-admin` realm role and the confidential `service-identity`
-   client.
+   client (with `IDENTITY_IDP_CLIENT_SECRET` as its secret).
 
 Run a service from its own repository against this stack, using the URLs in
 that repository's `.env.example`. Full instructions, including the `apps`

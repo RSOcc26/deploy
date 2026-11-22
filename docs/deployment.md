@@ -57,8 +57,8 @@ docker compose ps           # wait until healthy
   The realm also has the `gateway` audience mapper, the `platform-admin` role,
   the confidential `service-identity` client (ADR-0003) and the login theme
   `keycloak/themes/companycentral`. An existing volume does not pick these up:
-  recreate it or set them by hand. Copy the `service-identity` client secret
-  (Clients, Credentials) into `IDENTITY_IDP_CLIENT_SECRET` in `compose/.env`.
+  recreate it or set them by hand. The `service-identity` client secret is
+  set on import from `IDENTITY_IDP_CLIENT_SECRET` in `compose/.env`.
   Admin console: `localhost:8180/admin`, user `admin`, password
   `KEYCLOAK_ADMIN_PASSWORD` from `compose/.env` (master realm, infrastructure only).
 - Run services from their repositories with their `.env` pointing here, using
