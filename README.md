@@ -12,8 +12,9 @@ See the [architecture](https://github.com/RSOcc26/.github/blob/main/docs/archite
 > **Status:** the local Compose stack works (PostgreSQL, Kafka and Keycloak with
 > the `companycentral` realm and login theme). Helm charts and cluster
 > configuration are scaffold: the Compose file and Helm charts validate (`docker
-> compose config`, `helm lint`, kubeconform). Nothing is deployed yet: no
-> service images exist and no cluster has been provisioned.
+> compose config`, `helm lint`, kubeconform). Nothing is deployed yet: only
+> `service-identity`, `gateway` and `web` publish images, and no cluster has
+> been provisioned.
 
 This repository holds **no application code**, and application repositories
 hold no deployment configuration (see the
