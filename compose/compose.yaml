@@ -233,6 +233,9 @@ services:
       DEFAULT_LOCALE: sl
       OIDC_AUTHORITY: http://localhost:8180/realms/companycentral
       OIDC_CLIENT_ID: web
+      # Same-origin /api like the Ingress in the cluster: nginx proxies it to the gateway
+      GATEWAY_URL: http://gateway:8080
+    depends_on: [gateway]
     ports: ["127.0.0.1:8081:8080"]
 
 secrets:

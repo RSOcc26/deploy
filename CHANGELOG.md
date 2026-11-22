@@ -28,3 +28,5 @@ and the project uses [Semantic Versioning](https://semver.org/).
   `http://localhost:8080/api-docs/ui/static/oauth2-redirect.html`.
 - Compose: OIDC settings for the gateway (`OIDC_ISSUER`, `OIDC_AUDIENCE`,
   `OIDC_JWKS_URL`) and the web (`OIDC_AUTHORITY`, `OIDC_CLIENT_ID`).
+- Compose: `web` proxies `/api` to the gateway (`GATEWAY_URL`), so the app on
+  `localhost:8081` works like behind the Ingress.
