@@ -45,7 +45,7 @@ scripts/
   create-secrets.sh   generates credentials as Kubernetes Secrets (never in Git)
   deploy.sh           helm upgrade --install for one environment
   lint.sh             helm lint + template for every chart and environment
-terraform/            planned: cluster and DNS provisioning
+terraform/            Azure infrastructure: cluster, CI identity (see terraform/README.md)
 docs/
   deployment.md       how to run locally and deploy to a cluster
   adr/                decisions specific to deployment

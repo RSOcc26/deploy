@@ -52,3 +52,38 @@ jobs:
         run: |
           docker compose --env-file .env.example config -q
           docker compose --env-file .env.example --profile apps config -q
+
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # GitHub OIDC token for Azure (federated credential "deploy-pr")
+      id-token: write
+    defaults:
+      run:
+        working-directory: terraform
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+      - name: Format and validate
+        run: |
+          terraform fmt -check -recursive
+          terraform init -input=false -backend=false
+          terraform validate
+      # Azure trusts only pull_request runs of this repository; the identity
+      # can read but not change anything, so the plan is safe to run on PRs.
+      - name: Plan against the live infrastructure
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          terraform init -input=false -reconfigure
+          terraform plan -input=false -no-color -lock-timeout=2m | tee "$RUNNER_TEMP/plan.txt"
+          { echo '```text'; grep -E '^(Plan:|No changes)|will be|must be replaced' "$RUNNER_TEMP/plan.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
