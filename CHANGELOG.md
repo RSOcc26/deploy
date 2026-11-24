@@ -9,6 +9,21 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ### Added
 
 - Initial repository scaffold.
+- `keycloak` Helm chart: Keycloak in production mode at `https://<host>/idp`,
+  on the platform PostgreSQL (database `keycloak`), importing the
+  `companycentral` realm and login theme. The realm and theme moved from
+  `compose/keycloak/` to `helm/charts/keycloak/files/`, shared by both.
+- `create-secrets.sh` also creates the Keycloak database roles,
+  `keycloak-admin` and `identity-idp-client`.
+- `edge` routes `/idp` to Keycloak. dev uses Let's Encrypt production by
+  default and creates the `letsencrypt-prod` issuer; prod reuses it.
+- OIDC settings for `gateway`, `web` and `service-identity` (Keycloak in the
+  cluster); `service-identity` also gets `DATABASE_MIGRATION_URL` and
+  `IDP_CLIENT_SECRET`.
+
+### Changed
+
+- dev ServiceMonitors are off until kube-prometheus-stack is installed.
 - Keycloak (OIDC provider, ADR-0002) in the local Compose stack with the
   `companycentral` realm and the public `web` client.
 - Audience mapper on the `web` client: access tokens carry `aud: gateway`,

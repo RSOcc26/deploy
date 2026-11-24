@@ -28,8 +28,7 @@ compose/              local development stack (Docker Compose)
   .env.example        local credentials (placeholders)
   postgres/init/      creates one database, migration role and runtime role per service
   kafka/              creates the event and dead-letter topics
-  keycloak/           OIDC realm (companycentral) imported on first start,
-                      and themes/companycentral, our login theme (mounted)
+  (Keycloak realm and login theme live in helm/charts/keycloak/files/, mounted here too)
 k8s/                  one-time cluster bootstrap: namespaces, Ingress controller, operators
 helm/
   charts/
@@ -61,7 +60,7 @@ docker compose up -d                 # PostgreSQL :5432, Kafka :9094, Keycloak :
 
 Then finish the Keycloak setup:
 
-1. **Login theme:** `keycloak/themes/companycentral` is mounted into Keycloak and
+1. **Login theme:** `helm/charts/keycloak/files/themes/companycentral` is mounted into Keycloak and
    referenced by the realm, so nothing to do on a fresh volume.
 2. **`service-identity` client secret:** the realm import sets it from
    `IDENTITY_IDP_CLIENT_SECRET` in `compose/.env`. When you run

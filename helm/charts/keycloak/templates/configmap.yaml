@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-realm
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/part-of: companycentral
+data:
+  companycentral-realm.json: {{ .Files.Get "files/companycentral-realm.json" | quote }}
+---
+# ConfigMap keys cannot contain "/", so the theme's paths are flattened here
+# and restored by the volume's items in the Deployment.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-theme
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/part-of: companycentral
+data:
+  {{- range $path, $_ := .Files.Glob "files/themes/companycentral/**" }}
+  {{ trimPrefix "files/themes/companycentral/" $path | replace "/" "_" }}: {{ $.Files.Get $path | quote }}
+  {{- end }}

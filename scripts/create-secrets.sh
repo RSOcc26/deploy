@@ -10,7 +10,7 @@
 set -euo pipefail
 
 ns=${1:?usage: scripts/create-secrets.sh <namespace>}
-services=(identity access workflow inventory production)
+services=(identity access workflow inventory production keycloak)
 pg_host="companycentral-pg-rw.${ns}.svc"
 
 exists() { kubectl -n "$ns" get secret "$1" >/dev/null 2>&1; }
@@ -48,4 +48,21 @@ else
   kubectl -n "$ns" create secret generic gateway-tenant-context-key \
     --from-file=tenant-context-key.pem=<(openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256)
   echo "gateway: signing key created"
+fi
+
+# Keycloak's bootstrap admin (master realm, infrastructure only).
+if exists keycloak-admin; then
+  echo "keycloak: admin exists, skipped"
+else
+  kubectl -n "$ns" create secret generic keycloak-admin \
+    --from-literal=username=admin --from-file=password=<(printf %s "$(random)")
+  echo "keycloak: admin created"
+fi
+
+# Secret of the service-identity Keycloak client (ADR-0003); read by Keycloak's realm import and the service.
+if exists identity-idp-client; then
+  echo "identity: IdP client secret exists, skipped"
+else
+  kubectl -n "$ns" create secret generic identity-idp-client --from-file=secret=<(printf %s "$(random)")
+  echo "identity: IdP client secret created"
 fi

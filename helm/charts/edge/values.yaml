@@ -21,8 +21,11 @@ clusterIssuer:
   email: ""
   server: https://acme-staging-v02.api.letsencrypt.org/directory
 
-# Only web and the gateway are reachable from outside.
+# Only web, the gateway and Keycloak (browser login) are reachable from outside.
 backends:
+  keycloak:
+    service: keycloak
+    port: 80
   web:
     service: web
     port: 80

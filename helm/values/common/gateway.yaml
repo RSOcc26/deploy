@@ -13,6 +13,10 @@ env:
   PRODUCTION_URL: http://service-production
   TENANT_CONTEXT_ISSUER: companycentral-gateway
   TENANT_CONTEXT_SIGNING_KEY_FILE: /var/run/secrets/companycentral/tenant-context-key.pem
+  # OIDC_ISSUER is the public URL, set per environment
+  OIDC_AUDIENCE: gateway
+  # Keys fetched over the cluster network instead of the public URL
+  OIDC_JWKS_URL: http://keycloak/idp/realms/companycentral/protocol/openid-connect/certs
   KAFKA_BROKERS: companycentral-kafka-kafka-bootstrap:9092
   KAFKA_GROUP_ID: gateway
   KAFKA_CONSUME_TOPICS: identity.events,access.events

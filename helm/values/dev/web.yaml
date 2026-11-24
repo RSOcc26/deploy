@@ -8,3 +8,5 @@ replicaCount: 1
 
 env:
   LOG_LEVEL: debug
+  # Public Keycloak realm on the dev host (edge and keycloak --set host)
+  OIDC_AUTHORITY: https://dev.68-210-93-25.sslip.io/idp/realms/companycentral

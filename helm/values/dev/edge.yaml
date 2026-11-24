@@ -1,6 +1,7 @@
 # Public entry point: development environment.
 # Set at deploy time: --set host=<dev host> --set clusterIssuer.email=<e-mail>
+# dev creates the production issuer; prod reuses it (one release per issuer).
 clusterIssuer:
-  name: letsencrypt-staging
+  name: letsencrypt-prod
   create: true
-  server: https://acme-staging-v02.api.letsencrypt.org/directory
+  server: https://acme-v02.api.letsencrypt.org/directory

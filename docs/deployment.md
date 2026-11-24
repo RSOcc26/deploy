@@ -52,11 +52,11 @@ docker compose ps           # wait until healthy
 - Keycloak on `localhost:8180`, dev mode with its own file database in the
   `keycloak-data` volume. The `companycentral` realm (self-registration,
   sl/en, public `web` client with PKCE) is imported from
-  `keycloak/companycentral-realm.json` on first start only; later edits to the
+  `helm/charts/keycloak/files/companycentral-realm.json` on first start only; later edits to the
   file need `docker compose rm -sf keycloak && docker volume rm companycentral_keycloak-data`.
   The realm also has the `gateway` audience mapper, the `platform-admin` role,
   the confidential `service-identity` client (ADR-0003) and the login theme
-  `keycloak/themes/companycentral`. An existing volume does not pick these up:
+  `helm/charts/keycloak/files/themes/companycentral`. An existing volume does not pick these up:
   recreate it or set them by hand. The `service-identity` client secret is
   set on import from `IDENTITY_IDP_CLIENT_SECRET` in `compose/.env`.
   Admin console: `localhost:8180/admin`, user `admin`, password

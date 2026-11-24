@@ -27,6 +27,13 @@ spec:
                 name: {{ .Values.backends.gateway.service }}
                 port:
                   number: {{ .Values.backends.gateway.port }}
+          - path: /idp
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.backends.keycloak.service }}
+                port:
+                  number: {{ .Values.backends.keycloak.port }}
           - path: /
             pathType: Prefix
             backend:

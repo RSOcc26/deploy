@@ -8,7 +8,10 @@ replicaCount: 1
 
 env:
   LOG_LEVEL: debug
+  # Public Keycloak realm on the dev host (edge and keycloak --set host)
+  OIDC_ISSUER: https://dev.68-210-93-25.sslip.io/idp/realms/companycentral
 
+# Off until kube-prometheus-stack is installed
 metrics:
   serviceMonitor:
-    enabled: true
+    enabled: false

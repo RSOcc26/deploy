@@ -11,6 +11,8 @@ services:
   - inventory
   - production
 
+  - keycloak
+
 postgres:
   clusterName: companycentral-pg
   instances: 1

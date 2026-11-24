@@ -8,6 +8,8 @@ containerPort: 8080
 env:
   API_BASE_PATH: /api
   DEFAULT_LOCALE: sl
+  # OIDC_AUTHORITY is the public Keycloak URL, set per environment
+  OIDC_CLIENT_ID: web
 
 probes:
   liveness:

@@ -103,7 +103,7 @@ services:
   # Keycloak, the OIDC provider (ADR-0002), in dev mode with its file database.
   # Imports the companycentral realm on first start; admin console at
   # http://localhost:8180 (user admin, password from .env).
-  # The CompanyCentral login theme is mounted from ./keycloak/themes; dev mode
+  # The CompanyCentral login theme is mounted from helm/charts/keycloak/files (shared with the chart); dev mode
   # does not cache themes, so edits show on the next page load.
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.1
@@ -115,12 +115,14 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in .env}
       # Substituted into the realm import as the service-identity client secret
       IDENTITY_IDP_CLIENT_SECRET: ${IDENTITY_IDP_CLIENT_SECRET:?set IDENTITY_IDP_CLIENT_SECRET in .env}
+      # Substituted into the realm import; the cluster sets its public web URL here
+      WEB_REDIRECT_URI: http://localhost:8081/*
     ports:
       - "127.0.0.1:8180:8080"
     volumes:
       - keycloak-data:/opt/keycloak/data
-      - ./keycloak/companycentral-realm.json:/opt/keycloak/data/import/companycentral-realm.json:ro
-      - ./keycloak/themes/companycentral:/opt/keycloak/themes/companycentral:ro
+      - ../helm/charts/keycloak/files/companycentral-realm.json:/opt/keycloak/data/import/companycentral-realm.json:ro
+      - ../helm/charts/keycloak/files/themes/companycentral:/opt/keycloak/themes/companycentral:ro
 
   service-identity:
     <<: *service

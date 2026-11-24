@@ -22,6 +22,8 @@ workloads=("$@")
 if [ ${#workloads[@]} -eq 0 ]; then
   helm upgrade --install platform "$root/helm/charts/platform" -n "$ns" --create-namespace \
     -f "$values/$env/platform.yaml" --wait
+  helm upgrade --install keycloak "$root/helm/charts/keycloak" -n "$ns" \
+    --set host="${PUBLIC_HOST:?set PUBLIC_HOST}" --wait --timeout 10m
   workloads=("${all[@]}")
   deploy_edge=true
 else
