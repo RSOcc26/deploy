@@ -20,6 +20,9 @@ for env in dev prod; do
   helm lint "$charts/edge" -f "$values/$env/edge.yaml" "${edge_args[@]}"
   helm template edge "$charts/edge" -f "$values/$env/edge.yaml" "${edge_args[@]}" > "$out/$env-edge.yaml"
 
+  helm lint "$charts/keycloak" "${edge_args[@]}"
+  helm template keycloak "$charts/keycloak" "${edge_args[@]}" > "$out/$env-keycloak.yaml"
+
   for file in "$values"/common/*.yaml; do
     w=$(basename "$file" .yaml)
     helm lint "$charts/service" -f "$file" -f "$values/$env/$w.yaml" "${render_args[@]}"

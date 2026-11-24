@@ -1,0 +1,130 @@
+{{- $health := printf "%s/health" .Values.relativePath }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/part-of: companycentral
+spec:
+  # One replica: more need Keycloak's distributed cache configured
+  replicas: 1
+  # Never two instances on one database during an upgrade
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: keycloak
+        app.kubernetes.io/part-of: companycentral
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: keycloak
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # Imports the realm only when it does not exist yet
+          args: ["start", "--import-realm"]
+          env:
+            - name: KC_HOSTNAME
+              value: "https://{{ required "host is required" .Values.host }}{{ .Values.relativePath }}"
+            - name: KC_HTTP_RELATIVE_PATH
+              value: {{ .Values.relativePath | quote }}
+            # TLS ends at the Ingress; Traefik sends X-Forwarded-* headers
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_PROXY_HEADERS
+              value: xforwarded
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL_HOST
+              value: {{ .Values.database.host | quote }}
+            - name: KC_DB_URL_DATABASE
+              value: {{ .Values.database.name | quote }}
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: username
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: password
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.adminSecretName }}
+                  key: username
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.adminSecretName }}
+                  key: password
+            - name: IDENTITY_IDP_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.identityClientSecretName }}
+                  key: secret
+            - name: WEB_REDIRECT_URI
+              value: "https://{{ .Values.host }}/*"
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: management
+              containerPort: 9000
+          # The first start builds Keycloak for this configuration, which takes a while
+          startupProbe:
+            httpGet:
+              path: {{ $health }}/started
+              port: management
+            periodSeconds: 5
+            failureThreshold: 60
+          livenessProbe:
+            httpGet:
+              path: {{ $health }}/live
+              port: management
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: {{ $health }}/ready
+              port: management
+            periodSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: realm
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+            - name: theme
+              mountPath: /opt/keycloak/themes/companycentral
+              readOnly: true
+      volumes:
+        - name: realm
+          configMap:
+            name: keycloak-realm
+        - name: theme
+          configMap:
+            name: keycloak-theme
+            items:
+              {{- range $path, $_ := .Files.Glob "files/themes/companycentral/**" }}
+              {{- $rel := trimPrefix "files/themes/companycentral/" $path }}
+              - key: {{ replace "/" "_" $rel }}
+                path: {{ $rel }}
+              {{- end }}

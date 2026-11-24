@@ -1,8 +1,5 @@
-# Apache Kafka (KRaft) managed by Strimzi: one cluster per environment, one
-# events topic per producing service, one dead-letter topic per consuming
-# service, and one SCRAM user per client whose ACLs allow writing only its
-# own topics and reading only the topics it consumes. Strimzi stores each
-# user's password in a Secret with the user's name.
+# SCRAM user per client, ACLs limited to its own topics and the ones it consumes.
+# Strimzi stores each password in a Secret named after the user.
 {{- $k := .Values.kafka }}
 {{- $cluster := $k.clusterName }}
 {{- $replicas := int $k.replicas }}

@@ -1,11 +1,6 @@
-# Defaults for one CompanyCentral workload. Per-workload values live in
-# helm/values/common/<name>.yaml, per-environment overrides in
-# helm/values/<env>/<name>.yaml.
-
 nameOverride: ""
 
 image:
-  # ghcr.io/rsocc26/<repository>
   repository: ""
   # Required. Use the commit SHA or a release version; never "latest".
   tag: ""
@@ -20,11 +15,9 @@ containerPort: 3000
 service:
   port: 80
 
-# Non-secret configuration, rendered into a ConfigMap and passed as env vars.
 env: {}
 
-# Secret configuration: env var name -> existing Secret and key.
-# Secrets are created outside Git (see docs/deployment.md).
+# Env var -> existing Secret and key; created outside Git (docs/deployment.md).
 secretEnv: {}
 #  DATABASE_URL:
 #    secretName: workflow-database
@@ -77,8 +70,7 @@ metrics:
     path: /metrics
     interval: 30s
 
-# Runs database migrations before install and upgrade, using the
-# migration role. Enable once the image provides the command.
+# Pre-install/upgrade migration job; enable once the image provides the command.
 migrations:
   enabled: false
   command: ["npm", "run", "migrate"]

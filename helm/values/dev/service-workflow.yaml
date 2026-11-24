@@ -1,4 +1,3 @@
-# service-workflow: development environment.
 image:
   # Moving branch tag published from main; fine for dev only.
   tag: main

@@ -1,5 +1,3 @@
-# web: values shared by every environment.
-# Static React build served by an unprivileged nginx on port 8080.
 image:
   repository: ghcr.io/rsocc26/web
 
@@ -8,6 +6,8 @@ containerPort: 8080
 env:
   API_BASE_PATH: /api
   DEFAULT_LOCALE: sl
+  # OIDC_AUTHORITY is the public Keycloak URL, set per environment
+  OIDC_CLIENT_ID: web
 
 probes:
   liveness:

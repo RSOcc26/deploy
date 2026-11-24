@@ -1,6 +1,4 @@
 # Values for prometheus-community/kube-prometheus-stack (chart 92.11.0).
-#   helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
-#     --version 92.11.0 -n monitoring -f monitoring/kube-prometheus-stack.values.yaml
 
 prometheus:
   prometheusSpec:
@@ -22,7 +20,6 @@ prometheus:
               storage: 10Gi
 
 alertmanager:
-  # No alert routing yet; enable when there is somewhere to send alerts.
   enabled: false
 
 grafana:

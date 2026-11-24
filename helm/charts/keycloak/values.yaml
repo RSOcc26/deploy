@@ -1,0 +1,30 @@
+# Keycloak for one environment. Requires the platform release (database
+# "keycloak") and the Secrets from scripts/create-secrets.sh.
+# The realm and theme in files/ are shared with compose/.
+
+image:
+  repository: quay.io/keycloak/keycloak
+  # Same version as compose/compose.yaml
+  tag: "26.8.1"
+  pullPolicy: IfNotPresent
+
+# Required; same as the edge release's host.
+host: ""
+# Served under https://<host>/idp next to web and the gateway; not /auth,
+# which web uses for its own routes (/auth/callback).
+relativePath: /idp
+
+database:
+  host: companycentral-pg-rw
+  name: keycloak
+  secretName: pg-keycloak-migrator
+
+adminSecretName: keycloak-admin
+identityClientSecretName: identity-idp-client
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    memory: 1Gi

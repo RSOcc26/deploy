@@ -1,13 +1,7 @@
-# Values for grafana/alloy (chart 1.14.2): collects container logs from the
-# Kubernetes API and ships them to Loki. Services log structured JSON to stdout;
-# only `level` becomes a label (tenant and correlation IDs stay in the log line
-# to keep label cardinality low).
-#   helm upgrade --install alloy grafana/alloy --version 1.14.2 \
-#     -n monitoring -f monitoring/alloy.values.yaml
+# Only `level` becomes a label; tenant and correlation IDs stay in the line to limit cardinality.
 
 controller:
-  # One collector tailing all pods through the API; a DaemonSet would
-  # collect every log once per node.
+  # A DaemonSet would collect every log once per node; one collector tails via the API.
   type: deployment
   replicas: 1
 
