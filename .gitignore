@@ -13,10 +13,11 @@ helm/charts/*/charts/
 helm/charts/*/Chart.lock
 *.tgz
 
-# Terraform (planned)
+# Terraform
 .terraform/
 *.tfstate
 *.tfstate.*
+*.tfplan
 *.tfvars
 !*.tfvars.example
 

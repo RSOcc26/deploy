@@ -124,5 +124,5 @@ anything to a real cluster, or creating cloud resources (which may cost money),
 needs explicit approval. Run `scripts/lint.sh` after changing charts or values.
 
 Layout: `compose/`, `k8s/`, `helm/charts/{service,platform,edge}/`,
-`helm/values/{common,dev,prod}/`, `monitoring/`, `scripts/`, `terraform/`
-(planned), `docs/` (`deployment.md`, `adr/`).
+`helm/values/{common,dev,prod}/`, `monitoring/`, `scripts/`, `terraform/`,
+`docs/` (`deployment.md`, `adr/`).
