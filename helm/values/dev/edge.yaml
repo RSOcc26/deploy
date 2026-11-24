@@ -1,4 +1,3 @@
-# Public entry point: development environment.
 # Set at deploy time: --set host=<dev host> --set clusterIssuer.email=<e-mail>
 # dev creates the production issuer; prod reuses it (one release per issuer).
 clusterIssuer:

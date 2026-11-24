@@ -1,7 +1,4 @@
-# Values for grafana/loki (chart 7.5.0): single binary with filesystem storage.
-# Enough for a course deployment; switch to object storage for real retention.
-#   helm upgrade --install loki grafana/loki --version 7.5.0 \
-#     -n monitoring -f monitoring/loki.values.yaml
+# Single binary on filesystem storage; switch to object storage for real retention.
 
 deploymentMode: SingleBinary
 

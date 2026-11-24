@@ -1,4 +1,3 @@
-# gateway: values shared by every environment.
 image:
   repository: ghcr.io/rsocc26/gateway
 

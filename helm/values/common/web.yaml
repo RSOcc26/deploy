@@ -1,5 +1,3 @@
-# web: values shared by every environment.
-# Static React build served by an unprivileged nginx on port 8080.
 image:
   repository: ghcr.io/rsocc26/web
 

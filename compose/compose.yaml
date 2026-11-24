@@ -1,12 +1,5 @@
-# Local development stack for CompanyCentral.
-#
-#   cp .env.example .env      # then replace every placeholder password
-#   docker compose up -d                    # PostgreSQL, Kafka and Keycloak only
-#   docker compose --profile apps up -d     # plus services, gateway and web
-#
-# The "apps" profile pulls images from GHCR. They exist only after each
-# repository publishes its first image; until then run the services from
-# their own repositories with `npm run dev` against this stack.
+# The "apps" profile images exist on GHCR only after each repo's first publish;
+# until then run the services with `npm run dev` against this stack.
 name: companycentral
 
 x-service: &service
@@ -54,7 +47,6 @@ services:
       timeout: 3s
       retries: 20
 
-  # Single-node Kafka in KRaft mode (combined broker and controller).
   # Containers use kafka:9092; tools on the host use localhost:9094.
   # No authentication locally; per-service users and ACLs exist in Kubernetes.
   # Data is not persisted: recreating the container starts with empty topics.
@@ -62,7 +54,7 @@ services:
     image: apache/kafka:4.3.1
     restart: "no"
     environment:
-      CLUSTER_ID: hAu6N3RqQ2ixwsvVzhmvnA   # any base64 UUID; identifies the local cluster
+      CLUSTER_ID: hAu6N3RqQ2ixwsvVzhmvnA
       KAFKA_NODE_ID: "1"
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,HOST://:9094
@@ -84,7 +76,7 @@ services:
       timeout: 10s
       retries: 20
 
-  # Creates the same topics as the Kubernetes platform chart. Idempotent.
+  # Same topics as the Kubernetes platform chart.
   kafka-init:
     image: apache/kafka:4.3.1
     depends_on:
@@ -100,11 +92,7 @@ services:
       - ./kafka/create-topics.sh:/create-topics.sh:ro
     entrypoint: ["/bin/sh", "/create-topics.sh"]
 
-  # Keycloak, the OIDC provider (ADR-0002), in dev mode with its file database.
-  # Imports the companycentral realm on first start; admin console at
-  # http://localhost:8180 (user admin, password from .env).
-  # The CompanyCentral login theme is mounted from helm/charts/keycloak/files (shared with the chart); dev mode
-  # does not cache themes, so edits show on the next page load.
+  # Realm is imported on first start only. Dev mode doesn't cache the login theme, so edits show on reload.
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.1
     restart: "no"

@@ -8,16 +8,15 @@ image:
   tag: "26.8.1"
   pullPolicy: IfNotPresent
 
-# Public host name, the same as the edge release's. Required.
+# Required; same as the edge release's host.
 host: ""
 # Served under https://<host>/idp next to web and the gateway; not /auth,
-# which web uses for its own routes (/auth/callback)
+# which web uses for its own routes (/auth/callback).
 relativePath: /idp
 
 database:
   host: companycentral-pg-rw
   name: keycloak
-  # basic-auth Secret of the role that owns the database
   secretName: pg-keycloak-migrator
 
 adminSecretName: keycloak-admin

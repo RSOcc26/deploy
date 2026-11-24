@@ -71,7 +71,6 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.adminSecretName }}
                   key: password
-            # Substituted into the realm import
             - name: IDENTITY_IDP_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:

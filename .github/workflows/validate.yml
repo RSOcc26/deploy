@@ -1,6 +1,3 @@
-# Validates the deployment configuration: Helm charts with every
-# environment's values, rendered manifests against Kubernetes and CRD
-# schemas, and the Compose file. Complements the organization's shared CI.
 name: Validate
 
 on:

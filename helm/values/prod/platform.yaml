@@ -1,6 +1,4 @@
-# Platform components: production environment.
-# Two PostgreSQL instances give a streaming replica and automatic failover.
-# Three Kafka nodes give replication factor 3 with min.insync.replicas 2.
+# Three Kafka nodes give replication factor 3, min.insync.replicas 2.
 postgres:
   instances: 2
   storage:
